@@ -2,13 +2,17 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Ninja Xanh vs Ninja Đỏ</title>
 <style>
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;touch-action:none}
-html,body{margin:0;height:100%;background:#0d1020;font-family:system-ui,Arial,sans-serif;color:#fff;overflow:hidden}
-#wrap{position:relative;width:100vw;height:100vh;display:flex;align-items:center;justify-content:center}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:none}
+html,body{margin:0;height:100%;background:#0d1020;font-family:system-ui,Arial,sans-serif;color:#fff;overflow:hidden;overscroll-behavior:none}
+#wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#0d1020}
 #box{position:relative;aspect-ratio:2/1;width:min(100vw,200vh);max-height:100vh}
+@supports (height:100dvh){#box{width:min(100vw,200dvh);max-height:100dvh}}
 canvas{width:100%;height:100%;display:block;border-radius:8px;background:#222}
 .ov{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(10,14,35,.82);text-align:center;padding:10px;overflow:auto}
 .ov.on{display:flex}
@@ -23,18 +27,23 @@ table{border-collapse:collapse;font-size:clamp(11px,1.9vw,17px)}td{padding:3px 1
 kbd{background:#223;border:1px solid #567;border-radius:5px;padding:1px 7px}
 .item{display:flex;align-items:center;gap:10px;background:#1a2147;border-radius:10px;padding:5px 10px;width:min(560px,92%);justify-content:space-between;font-size:clamp(11px,1.9vw,16px);text-align:left}
 .item button{font-size:clamp(11px,1.8vw,15px)}
-#tc{position:absolute;inset:auto 0 6px 0;display:none;justify-content:space-between;padding:0 10px;pointer-events:none}
+/* touch controls: nằm ở góc màn hình thật (kể cả khi toàn màn hình) */
+#tc{position:absolute;left:0;right:0;bottom:0;display:none;justify-content:space-between;align-items:flex-end;pointer-events:none;visibility:hidden;z-index:6;
+  padding:0 max(12px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))}
 #tc.on{display:flex}
-#tc .g2{display:flex;gap:8px;pointer-events:auto;align-items:flex-end}
-#tc b{width:clamp(44px,11vh,64px);height:clamp(44px,11vh,64px);border-radius:50%;background:rgba(255,255,255,.18);border:2px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;font-size:clamp(18px,5vh,28px)}
+#tc .g2{display:flex;gap:10px;pointer-events:auto;align-items:flex-end}
+#tc b{width:clamp(50px,13vh,72px);height:clamp(50px,13vh,72px);border-radius:50%;background:rgba(255,255,255,.18);border:2px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;font-size:clamp(20px,5.5vh,30px)}
 #tc b.on{background:rgba(255,255,255,.5)}
-#mute{position:absolute;top:6px;right:6px;z-index:5;padding:.2em .6em;font-size:18px;background:rgba(0,0,0,.4);box-shadow:none}
+#ctl{position:absolute;bottom:max(6px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:7}
+#ctl button{padding:.2em .6em;font-size:18px;background:rgba(0,0,0,.45);box-shadow:none}
+#rot{position:absolute;inset:0;z-index:20;display:none;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:#0d1020;text-align:center;font-size:18px}
+@media (pointer:coarse) and (orientation:portrait){#rot{display:flex}}
 </style>
 </head>
 <body>
-<div id="wrap"><div id="box">
+<div id="wrap">
+<div id="box">
 <canvas id="c" width="900" height="450"></canvas>
-<button id="mute">🔊</button>
 
 <div class="ov on" id="lobby">
   <h1>NINJA XANH vs NINJA ĐỎ</h1>
@@ -51,8 +60,9 @@ kbd{background:#223;border:1px solid #567;border-radius:5px;padding:1px 7px}
     <tr><td><kbd>J</kbd></td><td>Đánh thường</td></tr>
     <tr><td><kbd>K</kbd></td><td>Tung skill (tốn 35 năng lượng)</td></tr>
     <tr><td><kbd>L</kbd> / <kbd>S</kbd> (giữ)</td><td>Đỡ đòn</td></tr>
+    <tr><td><kbd>F</kbd></td><td>Bật/tắt toàn màn hình</td></tr>
     <tr><td colspan="2">Đỡ đúng lúc địch vừa chém = <b>PARRY</b>: choáng địch &amp; hồi năng lượng!</td></tr>
-    <tr><td colspan="2">Trên điện thoại: dùng các nút cảm ứng trên màn hình (◀ ▶ ⤒ / ⚔ ✨ 🛡)</td></tr>
+    <tr><td colspan="2">Trên điện thoại: dùng các nút cảm ứng (◀ ▶ ⤒ / ⚔ ✨ 🛡), xoay ngang máy để chơi.</td></tr>
   </table>
   <button onclick="show('lobby')">Quay lại</button>
 </div>
@@ -67,12 +77,15 @@ kbd{background:#223;border:1px solid #567;border-radius:5px;padding:1px 7px}
   <h1 id="rt"></h1><div id="rd"></div>
   <div class="row"><button onclick="startBattle()" id="rb">Tiếp tục</button><button class="g" onclick="openShop()">🛒 Cửa hàng</button><button class="r" onclick="toLobby()">Về sảnh</button></div>
 </div>
+</div>
 
 <div id="tc">
   <div class="g2"><b data-k="L">◀</b><b data-k="R">▶</b><b data-k="U">⤒</b></div>
   <div class="g2"><b data-k="BLK">🛡</b><b data-k="SK">✨</b><b data-k="ATK">⚔</b></div>
 </div>
-</div></div>
+<div id="ctl"><button id="fs" title="Toàn màn hình">⛶</button><button id="mute">🔊</button></div>
+<div id="rot"><div style="font-size:48px">📱↻</div>Hãy xoay ngang điện thoại để chơi</div>
+</div>
 
 <script>
 const W=900,H=450,G=380,$=id=>document.getElementById(id);
@@ -83,8 +96,24 @@ const UPS={sword:['🗡 Sát thương kiếm','+3 dmg'],hp:['❤ Máu tối đa'
 let S={coins:100,lv:1,up:{sword:0,hp:0,skill:0,en:0},skin:0,own:[0]};
 try{const s=JSON.parse(localStorage.getItem('ninja_save'));if(s)S=Object.assign(S,s)}catch(e){}
 const save=()=>{try{localStorage.setItem('ninja_save',JSON.stringify(S))}catch(e){}};
+/* ---------- FULLSCREEN ---------- */
+const de=document.documentElement;
+const reqFS=de.requestFullscreen||de.webkitRequestFullscreen;
+const isFS=()=>!!(document.fullscreenElement||document.webkitFullscreenElement);
+function enterFS(){
+  if(!reqFS||isFS())return;
+  try{const r=reqFS.call(de);
+    const lock=()=>{try{screen.orientation&&screen.orientation.lock&&screen.orientation.lock('landscape').catch(()=>{})}catch(e){}};
+    if(r&&r.then)r.then(lock).catch(()=>{});else lock()}catch(e){}}
+function exitFS(){try{(document.exitFullscreen||document.webkitExitFullscreen).call(document)}catch(e){}}
+function toggleFS(){isFS()?exitFS():enterFS()}
+function fsUpdate(){$('fs').textContent=isFS()?'🗗':'⛶'}
+['fullscreenchange','webkitfullscreenchange'].forEach(ev=>document.addEventListener(ev,fsUpdate));
+if(!reqFS)$('fs').style.display='none'; // iPhone Safari không hỗ trợ: dùng "Thêm vào MH chính"
+$('fs').onclick=e=>{e.stopPropagation();toggleFS()};
 /* ---------- UI ---------- */
 function show(id){document.querySelectorAll('.ov').forEach(o=>o.classList.remove('on'));if(id)$(id).classList.add('on');
+  $('tc').style.visibility=id?'hidden':'visible';
   $('coin1').textContent=S.coins;$('lvl1').textContent=S.lv;
   if(id=='lobby')music('lobby')}
 function toLobby(){scene='lobby';show('lobby')}
@@ -111,6 +140,13 @@ function nz(t,d,v,hp){const s=ac.createBufferSource(),f=ac.createBiquadFilter(),
   g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);s.connect(f);f.connect(g);g.connect(master);s.start(t);s.stop(t+d)}
 function kick(t,v){const o=ac.createOscillator(),g=ac.createGain();o.frequency.setValueAtTime(150,t);o.frequency.exponentialRampToValueAtTime(40,t+.15);
   g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+.25);o.connect(g);g.connect(master);o.start(t);o.stop(t+.3)}
+/* tiếng kiếm "xeng": nhiều hài âm kim loại, tắt nhanh */
+function ring(t,k,v){
+  [1650,2480,3560,5230,7100].forEach((f,i)=>{
+    const o=ac.createOscillator(),g=ac.createGain();o.type='sine';o.frequency.setValueAtTime(f*k,t);
+    g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(v/(1+i*.6),t+.004);g.gain.exponentialRampToValueAtTime(.0001,t+.34-i*.04);
+    o.connect(g);g.connect(master);o.start(t);o.stop(t+.4)});
+  nz(t,.05,v*1.2,5000)}
 const CH=[[57,60,64,67],[53,57,60,64],[48,55,59,64],[55,59,62,64]],PENT=[69,72,74,76,79,81];
 function play(s,t){
   if(mode=='lobby'){ // chill lo-fi
@@ -135,6 +171,7 @@ function music(m){if(!ac||m===mode)return;mode=m;clearInterval(mtimer);step=0;nx
 function sfx(k){if(!ac)return;const t=ac.currentTime;
   if(k=='hit'){nz(t,.12,.4,900);tone(160,t,.12,'square',.15)}
   if(k=='swing')nz(t,.1,.12,3000);
+  if(k=='slash'){nz(t,.1,.14,3000);ring(t+.02,1,.11);ring(t+.13,1.13,.09)} // xeng xeng!
   if(k=='block'){tone(900,t,.1,'triangle',.2);nz(t,.06,.2,4000)}
   if(k=='parry'){tone(1400,t,.25,'sine',.25);tone(2100,t+.05,.25,'sine',.15)}
   if(k=='skill'){tone(300,t,.3,'sawtooth',.12);tone(600,t+.05,.25,'sawtooth',.08)}
@@ -148,12 +185,15 @@ addEventListener('keydown',()=>{A();music(scene=='battle'?'battle':'lobby')});
 const keys={},press={};
 const KM={a:'L',arrowleft:'L',d:'R',arrowright:'R',w:'U',arrowup:'U',' ':'U',j:'ATK',k:'SK',l:'BLK',s:'BLK',arrowdown:'BLK'};
 function setK(n,v){if(v&&!keys[n])press[n]=true;keys[n]=v}
-addEventListener('keydown',e=>{const n=KM[e.key.toLowerCase()];if(n){setK(n,true);e.preventDefault()}});
+addEventListener('keydown',e=>{if(e.key.toLowerCase()=='f'){toggleFS();return}const n=KM[e.key.toLowerCase()];if(n){setK(n,true);e.preventDefault()}});
 addEventListener('keyup',e=>{const n=KM[e.key.toLowerCase()];if(n)setK(n,false)});
 document.querySelectorAll('#tc b').forEach(b=>{const n=b.dataset.k;
-  b.addEventListener('pointerdown',e=>{e.preventDefault();b.classList.add('on');setK(n,true)});
-  ['pointerup','pointercancel','pointerleave'].forEach(ev=>b.addEventListener(ev,()=>{b.classList.remove('on');setK(n,false)}))});
-if(matchMedia('(pointer:coarse)').matches||'ontouchstart' in window)$('tc').classList.add('on');
+  b.addEventListener('pointerdown',e=>{e.preventDefault();try{b.setPointerCapture(e.pointerId)}catch(_){}b.classList.add('on');setK(n,true)});
+  ['pointerup','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>{b.classList.remove('on');setK(n,false)}))});
+document.addEventListener('contextmenu',e=>e.preventDefault());
+document.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
+const isTouch=matchMedia('(pointer:coarse)').matches||'ontouchstart' in window;
+if(isTouch)$('tc').classList.add('on');
 /* ---------- GAME ---------- */
 let scene='lobby',p,e,proj=[],parts=[],floats=[],over=false,shake=0;
 function mk(px,face,isP){
@@ -162,7 +202,7 @@ function mk(px,face,isP){
     atk:0,hit:true,cd:0,stun:0,hurt:0,blk:false,blkT:0,walk:0}
   :{isP,x:px,y:G,vx:0,vy:0,kx:0,face,c:'#e63030',dk:'#7a0909',sw:'#ff4040',max:70+lv*14,hp:70+lv*14,en:60,regen:8+lv,dmg:6+lv*1.3,sk:14+lv*2,spd:Math.min(150+lv*9,260),
     atk:0,hit:true,cd:0,stun:0,hurt:0,blk:false,blkT:0,walk:0,react:0,bt:0}}
-function startBattle(){A();scene='battle';over=false;p=mk(220,1,true);e=mk(680,-1,false);proj=[];parts=[];floats=[];show(null);music('battle')}
+function startBattle(){A();if(isTouch)enterFS();scene='battle';over=false;p=mk(220,1,true);e=mk(680,-1,false);proj=[];parts=[];floats=[];show(null);music('battle')}
 function spark(px,py,c,n){for(let i=0;i<n;i++)parts.push({x:px,y:py,vx:(Math.random()-.5)*400,vy:(Math.random()-.8)*400,l:.4+Math.random()*.3,c})}
 function say(px,py,t,c){floats.push({x:px,y:py,t,c,l:1})}
 function hurt(t,a,d){
@@ -181,7 +221,7 @@ function fighter(f,o,dt,inp){
   let mv=0;if(can&&f.atk<=0){mv=(inp.r?1:0)-(inp.l?1:0)}
   f.vx=mv*f.spd*(f.blk?.35:1);
   if(can&&inp.u&&f.y>=G){f.vy=-620}
-  if(can&&inp.atk&&f.atk<=0&&f.cd<=0&&!f.blk){f.atk=.35;f.hit=false;f.cd=.45;sfx('swing')}
+  if(can&&inp.atk&&f.atk<=0&&f.cd<=0&&!f.blk){f.atk=.35;f.hit=false;f.cd=.45;sfx(f.isP?'slash':'swing')}
   if(can&&inp.sk&&f.en>=35&&f.cd<=0&&!f.blk&&f.atk<=0){f.en-=35;f.cd=.6;f.atk=.2;f.hit=true;
     proj.push({x:f.x+f.face*50,y:f.y-60,vx:f.face*560,o:f,d:f.sk});sfx('skill')}
   if(f.atk>0){f.atk-=dt;if(!f.hit&&f.atk<.2){f.hit=true;strike(f,o)}}
@@ -229,14 +269,11 @@ function drawF(f){
   const air=f.y<G-2,w=air?8:Math.sin(f.walk)*11;
   limb(-9,-38,-9+w,-4,18,f);limb(11,-38,11-w,-4,18,f);
   limb(0,-44,0,-68,40,f);
-  // head
   x.fillStyle=f.dk;x.beginPath();x.arc(3,-102,31,0,7);x.fill();x.fillStyle=f.c;x.beginPath();x.arc(3,-102,28,0,7);x.fill();
-  // headband
   x.strokeStyle='#111';x.lineWidth=9;x.beginPath();x.moveTo(-23,-108);x.lineTo(28,-112);x.stroke();
   x.lineWidth=7;x.beginPath();x.moveTo(-22,-109);x.lineTo(-48,-120);x.moveTo(-22,-107);x.lineTo(-50,-98);x.stroke();
   x.fillStyle='#fff';x.beginPath();x.ellipse(15,-100,9,6,-.2,0,7);x.fill();
   x.fillStyle=f.isP?'#bde':'#fcc';x.beginPath();x.arc(17,-100,2.5,0,7);x.fill();
-  // arm + sword
   let ang=-.7,hx=30,hy=-56;
   if(f.blk){ang=-1.5;hx=34;hy=-70}
   else if(f.atk>0){const k=1-f.atk/.35;ang=-2.1+3.1*Math.min(1,k*1.3);hx=26+k*14}
@@ -248,39 +285,4 @@ function drawF(f){
   x.shadowBlur=0;x.strokeStyle='#fff';x.lineWidth=2.5;x.beginPath();x.moveTo(10,-1);x.lineTo(90,-1);x.stroke();
   if(f.atk>.05&&f.atk<.3&&!f.blk){x.globalAlpha=.35;x.strokeStyle=f.sw;x.lineWidth=14;x.beginPath();x.arc(0,0,80,-1.4,.2);x.stroke()}
   x.restore();
-  if(f.blk){x.globalAlpha=.25+(f.blkT<.22?.3:0);x.fillStyle=f.blkT<.22?'#ffe14d':'#8cf';x.beginPath();x.ellipse(44,-70,22,56,0,0,7);x.fill()}
-  x.restore()}
-function bg(){
-  let g=x.createLinearGradient(0,0,0,H);g.addColorStop(0,'#2b3445');g.addColorStop(1,'#6f7a8c');x.fillStyle=g;x.fillRect(0,0,W,H);
-  x.fillStyle='#3a4558';x.beginPath();x.moveTo(500,0);x.lineTo(W,0);x.lineTo(W,300);x.lineTo(620,260);x.fill();
-  x.fillStyle='#b4bccb';x.fillRect(0,G,W,H-G);
-  x.strokeStyle='rgba(60,70,90,.35)';x.lineWidth=2;
-  for(let i=-6;i<16;i++){x.beginPath();x.moveTo(i*70,G);x.lineTo(i*110-200,H);x.stroke()}
-  for(let j=1;j<4;j++){x.beginPath();x.moveTo(0,G+j*j*7);x.lineTo(W,G+j*j*7);x.stroke()}
-  x.strokeStyle='#223';x.lineWidth=4;x.beginPath();x.moveTo(0,G);x.lineTo(W,G);x.stroke()}
-function bar(px,py,w,v,m,c,flip){x.fillStyle='rgba(0,0,0,.55)';x.fillRect(px-3,py-3,w+6,18);
-  x.fillStyle=c;const bw=w*Math.max(0,v)/m;x.fillRect(flip?px+w-bw:px,py,bw,12)}
-function draw(){
-  x.save();if(shake>.5)x.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);
-  bg();
-  if(scene=='battle'||scene=='result'){
-    [p,e].sort((a,b)=>a.y-b.y).forEach(drawF);
-    proj.forEach(q=>{x.save();x.translate(q.x,q.y);x.scale(Math.sign(q.vx),1);x.shadowColor=q.o.sw;x.shadowBlur=20;x.strokeStyle=q.o.sw;x.lineWidth=10;
-      x.beginPath();x.arc(-10,0,38,-1.1,1.1);x.stroke();x.strokeStyle='#fff';x.lineWidth=3;x.beginPath();x.arc(-10,0,38,-1,1);x.stroke();x.restore()});
-    parts.forEach(q=>{x.globalAlpha=Math.min(1,q.l*3);x.fillStyle=q.c;x.fillRect(q.x,q.y,5,5)});x.globalAlpha=1;
-    floats.forEach(q=>{x.globalAlpha=Math.min(1,q.l*2);x.fillStyle=q.c;x.font='bold 22px sans-serif';x.textAlign='center';x.fillText(q.t,q.x,q.y)});x.globalAlpha=1;
-    bar(30,24,300,p.hp,p.max,'#3b8bff');bar(30,44,200,p.en,100,'#ffd23a');
-    bar(W-330,24,300,e.hp,e.max,'#ff4545',true);bar(W-230,44,200,e.en,100,'#ffd23a',true);
-    x.fillStyle='#fff';x.font='bold 13px sans-serif';x.textAlign='left';x.fillText('BẠN',30,18);x.textAlign='right';x.fillText('ĐỊCH · MÀN '+S.lv,W-30,18);
-    x.textAlign='center';x.fillText('🪙 '+S.coins,W/2,20)
-  }else{ // lobby preview
-    const t=performance.now()/1000,a={isP:1,x:300,y:G+Math.sin(t*2)*3,face:1,c:'#1f6fe0',dk:'#0a2c78',sw:SKINS[S.skin].c,atk:0,blk:false,hurt:0,walk:0},
-      b={isP:0,x:600,y:G+Math.sin(t*2+1)*3,face:-1,c:'#e63030',dk:'#7a0909',sw:'#ff4040',atk:0,blk:false,hurt:0,walk:0};
-    drawF(a);drawF(b)}
-  x.restore()}
-let last=performance.now();
-(function loop(n){const dt=Math.min(.033,(n-last)/1000);last=n;update(dt);draw();requestAnimationFrame(loop)})(last);
-show('lobby');
-</script>
-</body>
-  </html>
+  if(f.blk){x.globalAlpha=.25+
