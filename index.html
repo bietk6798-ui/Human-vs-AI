@@ -14,7 +14,10 @@ html,body{margin:0;height:100%;background:#0d1020;font-family:system-ui,Arial,sa
 #box{position:relative;aspect-ratio:2/1;width:min(100vw,200vh);max-height:100vh}
 @supports (height:100dvh){#box{width:min(100vw,200dvh);max-height:100dvh}}
 canvas{width:100%;height:100%;display:block;border-radius:8px;background:#222}
-.ov{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(10,14,35,.82);text-align:center;padding:10px;overflow:auto}
+.ov{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:flex-start;gap:10px;background:rgba(10,14,35,.82);text-align:center;padding:10px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.ov>:first-child{margin-top:auto}.ov>:last-child{margin-bottom:auto}
+.ov,.ov *{touch-action:pan-y}
+.x{position:fixed;top:max(8px,env(safe-area-inset-top));right:max(8px,env(safe-area-inset-right));z-index:30;width:46px;height:46px;padding:0;border-radius:50%;font-size:22px;line-height:1;background:#e23b3b;box-shadow:0 2px 0 #8d1d1d}
 .ov.on{display:flex}
 h1{margin:0;font-size:clamp(20px,5vw,46px);background:linear-gradient(90deg,#3d9bff,#ff4d4d);-webkit-background-clip:text;color:transparent}
 h2{margin:0;font-size:clamp(16px,3vw,28px)}
@@ -53,6 +56,7 @@ kbd{background:#223;border:1px solid #567;border-radius:5px;padding:1px 7px}
 </div>
 
 <div class="ov" id="help">
+  <button class="x" onclick="show('lobby')">✕</button>
   <h2>Hướng dẫn điều khiển</h2>
   <table>
     <tr><td><kbd>A</kbd> / <kbd>←</kbd>, <kbd>D</kbd> / <kbd>→</kbd></td><td>Di chuyển trái / phải</td></tr>
@@ -68,6 +72,7 @@ kbd{background:#223;border:1px solid #567;border-radius:5px;padding:1px 7px}
 </div>
 
 <div class="ov" id="shop">
+  <button class="x" onclick="show('lobby')">✕</button>
   <h2>🛒 Cửa hàng — 🪙 <span id="coin2">0</span></h2>
   <div id="items"></div>
   <button onclick="show('lobby')">Quay lại sảnh</button>
@@ -107,13 +112,14 @@ function enterFS(){
     if(r&&r.then)r.then(lock).catch(()=>{});else lock()}catch(e){}}
 function exitFS(){try{(document.exitFullscreen||document.webkitExitFullscreen).call(document)}catch(e){}}
 function toggleFS(){isFS()?exitFS():enterFS()}
-function fsUpdate(){$('fs').textContent=isFS()?'🗗':'⛶'}
+function fsUpdate(){$('fs').textContent='⛶'}
 ['fullscreenchange','webkitfullscreenchange'].forEach(ev=>document.addEventListener(ev,fsUpdate));
 if(!reqFS)$('fs').style.display='none'; // iPhone Safari không hỗ trợ: dùng "Thêm vào MH chính"
 $('fs').onclick=e=>{e.stopPropagation();toggleFS()};
 /* ---------- UI ---------- */
 function show(id){document.querySelectorAll('.ov').forEach(o=>o.classList.remove('on'));if(id)$(id).classList.add('on');
   $('tc').style.visibility=id?'hidden':'visible';
+  $('ctl').style.display=(id=='shop'||id=='help'||id=='res')?'none':'flex';
   $('coin1').textContent=S.coins;$('lvl1').textContent=S.lv;
   if(id=='lobby')music('lobby')}
 function toLobby(){scene='lobby';show('lobby')}
@@ -191,7 +197,7 @@ document.querySelectorAll('#tc b').forEach(b=>{const n=b.dataset.k;
   b.addEventListener('pointerdown',e=>{e.preventDefault();try{b.setPointerCapture(e.pointerId)}catch(_){}b.classList.add('on');setK(n,true)});
   ['pointerup','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>{b.classList.remove('on');setK(n,false)}))});
 document.addEventListener('contextmenu',e=>e.preventDefault());
-document.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
+document.addEventListener('touchmove',e=>{if(!e.target.closest||!e.target.closest('.ov'))e.preventDefault()},{passive:false});
 const isTouch=matchMedia('(pointer:coarse)').matches||'ontouchstart' in window;
 if(isTouch)$('tc').classList.add('on');
 /* ---------- GAME ---------- */
